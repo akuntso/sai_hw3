@@ -28,13 +28,14 @@ int main()
     sai_object_id_t           vr_oid;
     sai_switch_notification_t notifications;
     sai_lag_api_t            *lag_api;
-    sai_object_id_t           lag_oid1, lag_oid2, lag_oid3, lag_oid4, lag_oid5, lag_oid6; 
-    sai_object_id_t           lag_member_oid1, lag_member_oid2, lag_member_oid3, lag_member_oid4, lag_member_oid5, lag_member_oid6, lag_member_oid7, lag_member_oid8, lag_member_oid9, lag_member_oid10, lag_member_oid11, lag_member_oid12, lag_member_oid13, lag_member_oid14, lag_member_oid15, lag_member_oid16, lag_member_oid17, lag_member_oid18;
+    sai_object_id_t           lag_oid1, lag_oid2;
+    sai_object_id_t           lag_member_oid1, lag_member_oid2, lag_member_oid3, lag_member_oid4;
     sai_attribute_t           lag_attr;
     sai_attribute_t           attrs[2];
     sai_attribute_t           lag_member_attr[2];
     sai_object_id_t           port_list[32];
-    
+    sai_object_id_t           lag1_ports[16];
+    sai_object_id_t           lag2_ports[16];
 
     status = sai_api_initialize(0, &test_services);
     if (status != SAI_STATUS_SUCCESS) {
@@ -47,7 +48,7 @@ int main()
     attrs[0].id = SAI_SWITCH_ATTR_PORT_LIST;
     attrs[0].value.objlist.list = port_list;
     attrs[0].value.objlist.count = 64;
-    
+
     status = switch_api->get_switch_attribute(1, attrs);
 
     status = sai_api_query(SAI_API_LAG, (void**)&lag_api);
@@ -109,6 +110,8 @@ int main()
     }
 
     lag_attr.id = SAI_LAG_ATTR_PORT_LIST;
+    lag_attr.value.objlist.count = 16;
+    lag_attr.value.objlist.list = lag1_ports;
     status = lag_api->get_lag_attribute(lag_oid1, 1, &lag_attr);
     if (status != SAI_STATUS_SUCCESS) {
         printf("Failed to get LAG #1 attributes, status=%d\n", status);
@@ -116,6 +119,8 @@ int main()
     }
 
     lag_attr.id = SAI_LAG_ATTR_PORT_LIST;
+    lag_attr.value.objlist.count = 16;
+    lag_attr.value.objlist.list = lag2_ports;
     status = lag_api->get_lag_attribute(lag_oid2, 1, &lag_attr);
     if (status != SAI_STATUS_SUCCESS) {
         printf("Failed to get LAG #2 attributes, status=%d\n", status);
@@ -144,6 +149,8 @@ int main()
     }
 
     lag_attr.id = SAI_LAG_ATTR_PORT_LIST;
+    lag_attr.value.objlist.count = 16;
+    lag_attr.value.objlist.list = lag1_ports;
     status = lag_api->get_lag_attribute(lag_oid1, 1, &lag_attr);
     if (status != SAI_STATUS_SUCCESS) {
         printf("Failed to get LAG #1 attributes after removing member, status=%d\n", status);
@@ -158,6 +165,8 @@ int main()
     }
 
     lag_attr.id = SAI_LAG_ATTR_PORT_LIST;
+    lag_attr.value.objlist.count = 16;
+    lag_attr.value.objlist.list = lag2_ports;
     status = lag_api->get_lag_attribute(lag_oid2, 1, &lag_attr);
     if (status != SAI_STATUS_SUCCESS) {
         printf("Failed to get LAG #2 attributes after removing member, status=%d\n", status);
@@ -192,11 +201,6 @@ int main()
         return 1;
     }
 
-    status = sai_api_uninitialize();
-    if (status != SAI_STATUS_SUCCESS) {
-        printf("Failed to uninitialize SAI API, status=%d\n", status);
-        return 1;
-    }
     // Create 6 LAGs (System should return error - Cannot create LAG: limit is reached)
     sai_object_id_t lag_oids[6];
 
@@ -205,7 +209,7 @@ int main()
     }
 
     // Create 17 LAG_MEMBERs (System should return error - Cannot create LAG MEMBER: limit is reached)
-    sai_object_id_t lag_member_oids[17];
+    sai_object_id_t           lag_member_oids[17];
     sai_attribute_t           lag_member_attrs[2];
     lag_member_attrs[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
     lag_member_attrs[0].value.oid = lag_oid1;
@@ -224,6 +228,12 @@ int main()
     status = lag_api->remove_lag(lag_oid5);
     if (status != SAI_STATUS_SUCCESS) {
         printf("Failed to remove LAG #5, status=%d\n", status);
+        return 1;
+    }
+
+    status = sai_api_uninitialize();
+    if (status != SAI_STATUS_SUCCESS) {
+        printf("Failed to uninitialize SAI API, status=%d\n", status);
         return 1;
     }
 
